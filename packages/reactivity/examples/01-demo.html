@@ -14,7 +14,10 @@
       import { ref, effect } from '../dist/reactivity.esm.js'
       const count = ref(0)
       effect(() => {
-        console.log('count.value => ', count.value)
+        console.log('count.value effect1 => ', count.value)
+      })
+      effect(() => {
+        console.log('count.value effect2 => ', count.value)
       })
       setTimeout(() => {
         count.value = 1

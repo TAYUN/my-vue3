@@ -4,29 +4,68 @@ enum ReactiveFlags {
   IS_REF = '__v_isRef',
 }
 /**
+ * 链表节点
+ */
+interface Link {
+  // 保存effect
+  sub: Function
+  // 上一个节点
+  nextSub: Link | undefined
+  // 下一个节点
+  preSub: Link | undefined
+}
+
+/**
  * ref对象
  */
 class RefImpl {
   _value;
   // 标记，证明是一个ref
   [ReactiveFlags.IS_REF] = true
-  subs
+  /**
+   * 订阅者头结点 header
+   */
+  subs: Link
+  /**
+   * 订阅者尾节点 tail
+   */
+  subsTail: Link
   constructor(value) {
     this._value = value
   }
   get value() {
-    console.log('有人访问我了')
     if (activeSub) {
-      //如果activeSub有值，说明有依赖，那么将activeSub添加到subs中，更新的时候触发
-      this.subs = activeSub
+      const newLink = {
+        sub: activeSub,
+        nextSub: undefined,
+        preSub: undefined,
+      }
+      /**
+       * 添加到链表末尾
+       * 1. 如果有尾节点，将newLink设置为尾节点的nextSub
+       * 2. 否者尾节点为空，则将newLink设置为头节点
+       */
+      if (this.subsTail) {
+        this.subsTail.nextSub = newLink
+        newLink.preSub = this.subsTail
+        this.subsTail = newLink
+      } else {
+        this.subs = newLink
+        this.subsTail = newLink
+      }
     }
     return this._value
   }
   set value(newValue) {
-    console.log('我的值更新了')
     this._value = newValue
     // 通知effect重新执行
-    this.subs?.()
+    let link = this.subs
+    const queuedEffect = []
+    while( link ){
+      queuedEffect.push(link.sub)
+      link = link.nextSub
+    }
+    queuedEffect.forEach(effect => effect())
   }
 }
 
