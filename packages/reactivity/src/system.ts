@@ -50,5 +50,5 @@ export function progate(subs) {
     queuedEffect.push(link.sub)
     link = link.nextSub
   }
-  queuedEffect.forEach(effect => effect.run())
+  queuedEffect.forEach(effect => effect.notify())
 }

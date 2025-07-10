@@ -13,12 +13,19 @@
       // } from '../../../node_modules/vue/dist/vue.esm-browser.prod.js'
       import { ref, effect } from '../dist/reactivity.esm.js'
       const count = ref(0)
-      effect(() => {
-        console.log('count.value effect1 => ', count.value)
-      })
-      effect(() => {
-        console.log('count.value effect2 => ', count.value)
-      })
+      const runner = effect(
+        () => {
+          console.log('外部effect count.value => ', count.value)
+          return 1
+        },
+        {
+          scheduler() {
+            const newValue = runner()
+            console.log('触发调度器', newValue)
+          },
+        },
+      )
+      console.dir(runner)
       setTimeout(() => {
         count.value = 1
       }, 1000)
