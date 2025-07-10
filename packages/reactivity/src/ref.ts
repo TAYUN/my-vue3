@@ -31,7 +31,7 @@ class RefImpl {
   }
   set value(newValue) {
     this._value = newValue
-    traggerRef(this)
+    triggerRef(this)
   }
 }
 
@@ -62,7 +62,7 @@ export function trackRef(dep) {
  * 触发 ref 关联的 effect 重新执行
  * @param dep
  */
-export function traggerRef(dep) {
+export function triggerRef(dep) {
   if (dep.subs) {
     progate(dep.subs)
   }
