@@ -1,6 +1,12 @@
+import { Link } from './system'
+
 export let activeSub
 
 class ReactiveEffect {
+  // 依赖项链表头节点
+  deps: Link | undefined
+  // 依赖项链表尾节点
+  depsTail: Link | undefined
   constructor(public fn) {}
   run() {
     // 先将当前的effect保存起来，用来处理嵌套逻辑
@@ -8,6 +14,8 @@ class ReactiveEffect {
 
     // 每次执行fn的时候，将当前的effect保存在activeSub中
     activeSub = this
+    // 标记为undefined，表示dep触发了重新执行，要尝试复用 link 节点
+    this.depsTail = undefined
     try {
       return this.fn()
     } finally {
