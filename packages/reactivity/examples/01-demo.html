@@ -11,24 +11,19 @@
     }
   </style>
   <body>
-    <button id="btn">按钮</button>
+    <div id="app"></div>
+
     <script type="module">
       // import {
       //   ref,
       //   effect,
       // } from '../../../node_modules/vue/dist/vue.esm-browser.prod.js'
       import { ref, effect } from '../dist/reactivity.esm.js'
-      const flag = ref(true)
-      const runner = effect(() => {
-        debugger;
-        flag.value
-        console.log('effect')
+
+      let count = ref(0)
+      const e = effect(() => {
+        console.log(count.value++)
       })
-      // const btn = document.getElementById('btn')
-      btn.onclick = () => {
-        flag.value = !flag.value
-        console.log('----')
-      }
     </script>
   </body>
 </html>

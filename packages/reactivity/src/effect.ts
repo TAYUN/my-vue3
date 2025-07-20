@@ -1,4 +1,4 @@
-import { Link } from './system'
+import { endTrack, Link, startTrack } from './system'
 
 export let activeSub
 
@@ -7,6 +7,8 @@ class ReactiveEffect {
   deps: Link | undefined
   // 依赖项链表尾节点
   depsTail: Link | undefined
+  // 是否在追踪标记 用于处理循环递归追踪的问题
+  tracking = false
   constructor(public fn) {}
   run() {
     // 先将当前的effect保存起来，用来处理嵌套逻辑
@@ -14,11 +16,12 @@ class ReactiveEffect {
 
     // 每次执行fn的时候，将当前的effect保存在activeSub中
     activeSub = this
-    // 标记为undefined，表示dep触发了重新执行，要尝试复用 link 节点
-    this.depsTail = undefined
+
+    startTrack(this)
     try {
       return this.fn()
     } finally {
+      endTrack(this)
       // 执行fn完成之后，恢复之前的effect
       activeSub = prevSub
     }
@@ -37,6 +40,9 @@ class ReactiveEffect {
     this.run()
   }
 }
+
+
+
 export function effect(fn, options) {
   const e = new ReactiveEffect(fn)
   e.run()
