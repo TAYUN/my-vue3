@@ -18,12 +18,19 @@
       //   ref,
       //   effect,
       // } from '../../../node_modules/vue/dist/vue.esm-browser.prod.js'
-      import { ref, effect } from '../dist/reactivity.esm.js'
-
-      let count = ref(0)
-      const e = effect(() => {
-        console.log(count.value++)
+      import { reactive, ref, effect } from '../dist/reactivity.esm.js'
+      const count = ref(0)
+      const state = reactive({
+        count,
       })
+
+      effect(() =>{
+        console.log(state.count)
+      })
+
+      setTimeout(() => {
+        count.value++
+      }, 1000);
     </script>
   </body>
 </html>
