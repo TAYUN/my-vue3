@@ -1,6 +1,6 @@
 // import { ReactiveEffect } from 'vue'
 
-interface Dep {
+interface Dependency {
   // 订阅者链表的头节点
   subs: Link | undefined
   // 订阅者链表的尾节点
@@ -20,7 +20,7 @@ export interface Link {
   // 保存effect
   sub: Sub
   // 节点的依赖项 ref computed
-  dep: Dep
+  dep: Dependency
   // 下一个依赖项节点
   nextDep: Link | undefined
   // 上一个节点
