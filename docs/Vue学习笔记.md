@@ -6,15 +6,81 @@
 
 #### 什么是响应式？
 
-响应式系统是 Vue 的核心特性，当数据发生变化时，视图会自动更新。
+Vue 的响应式系统核心在于**响应式对象的属性与 effect 副作用函数之间建立的依赖关系**。当响应式数据发生变化时，所有依赖该数据的副作用函数会自动重新执行，从而实现数据驱动的视图更新。
+
+**响应式系统的三个核心要素：**
+
+1. **响应式对象（Reactive Object）**：通过 Proxy 代理的对象，能够拦截属性的读取和设置操作
+2. **副作用函数（Effect Function）**：依赖响应式数据的函数，当依赖的数据变化时自动重新执行
+3. **依赖收集系统（Dependency Collection）**：建立数据属性与副作用函数之间的订阅关系
+
+**响应式工作流程：**
 
 ```javascript
-// 基本响应式示例
-const state = reactive({ count: 0 })
+// 1. 创建响应式对象
+const state = reactive({ count: 0, name: 'Vue' })
+
+// 2. 创建副作用函数，建立依赖关系
 effect(() => {
-  console.log(state.count) // 当 count 变化时自动执行
+  // 读取 state.count 时，会自动收集依赖
+  console.log(`计数器: ${state.count}`)
+  // 这个 effect 现在依赖于 state.count
 })
-state.count++ // 触发 effect 重新执行
+
+effect(() => {
+  // 读取 state.name 时，会自动收集依赖
+  console.log(`框架名称: ${state.name}`)
+  // 这个 effect 现在依赖于 state.name
+})
+
+// 3. 数据变化触发依赖更新
+state.count++ // 只触发第一个 effect 重新执行
+state.name = 'Vue.js' // 只触发第二个 effect 重新执行
+```
+
+**依赖关系的建立过程：**
+
+```javascript
+// 当 effect 执行时：
+effect(() => {
+  console.log(state.count) // 触发 get 陷阱
+})
+
+// 内部发生的事情：
+// 1. effect 开始执行，设置 activeEffect = currentEffect
+// 2. 访问 state.count，触发 Proxy 的 get 陷阱
+// 3. get 陷阱调用 track(target, 'count')，建立依赖关系
+// 4. 将 currentEffect 添加到 count 属性的依赖集合中
+// 5. effect 执行完毕，清除 activeEffect
+
+// 当数据变化时：
+state.count = 10 // 触发 set 陷阱
+
+// 内部发生的事情：
+// 1. 触发 Proxy 的 set 陷阱
+// 2. set 陷阱调用 trigger(target, 'count')
+// 3. 找到 count 属性的所有依赖 effect
+// 4. 逐个执行这些 effect 函数
+```
+
+**响应式系统的数据结构：**
+
+```javascript
+// 依赖收集的三层映射结构
+targetMap: WeakMap {
+  target1: Map {
+    'count' => Set { effect1, effect2 },
+    'name'  => Set { effect3 }
+  },
+  target2: Map {
+    'value' => Set { effect4 }
+  }
+}
+
+// 这个结构表示：
+// - target1.count 被 effect1 和 effect2 依赖
+// - target1.name 被 effect3 依赖
+// - target2.value 被 effect4 依赖
 ```
 
 #### 核心 API
@@ -34,6 +100,7 @@ state.count++ // 触发 effect 重新执行
 ### reactive实现原理
 
 实现reactive过程中需要处理的问题：
+
 1. 非对象类型的处理问题
 2. target是对象，怎么关联依赖关系和触发依赖更新（targetMap和Dep的作用）
 3. 访问对象的访问器属性的时候，this的指向问题（receiver的作用）
@@ -42,8 +109,6 @@ state.count++ // 触发 effect 重新执行
 6. 更新的值没发生变化，不应该触发更新的处理
 7. target.a中的值是ref，读取时自动解包和赋值时智能处理的问题
 8. 嵌套对象的深度响应式问题（target={a:{b:1}}需要递归处理）
-
-
 
 #### 1. reactive函数实现中的8个核心问题及解决方案
 
