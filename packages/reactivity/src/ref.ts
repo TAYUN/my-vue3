@@ -1,3 +1,5 @@
+import { hasChange, isObject } from '@vue/shared';
+import { reactive } from './index';
 import { activeSub } from './effect'
 import { Link, link, progate } from './system'
 
@@ -21,7 +23,8 @@ class RefImpl {
    */
   subsTail: Link
   constructor(value) {
-    this._value = value
+    // 如果是对象，调用reactive方法，返回一个响应式对象
+    this._value = isObject(value) ? reactive(value) : value
   }
   get value() {
     if (activeSub) {
@@ -30,8 +33,13 @@ class RefImpl {
     return this._value
   }
   set value(newValue) {
-    this._value = newValue
-    triggerRef(this)
+    if (hasChange(newValue, this._value)) {
+      /**
+       * 如果新值和旧值不相等，才触发更新
+       */
+      this._value = isObject(newValue) ? reactive(newValue) : newValue
+      triggerRef(this)
+    }
   }
 }
 
