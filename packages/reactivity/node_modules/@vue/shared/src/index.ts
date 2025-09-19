@@ -12,3 +12,12 @@ export function isObject(obj: any): boolean {
 export function hasChange(newValue, oldValue ) {
   return !Object.is(newValue, oldValue)
 }
+
+/**
+ * 判断是否是一个函数
+ * @param value
+ * @returns { boolean }
+ */
+export function isFunction(value) {
+  return typeof value === 'function'
+}
